@@ -1,0 +1,9 @@
+{
+  "telegraph_beep": {
+    "category": "block",
+    "subtitle": "Telegraph beeps",
+    "sounds": [
+      "telegraph:telegraph_beep"
+    ]
+  }
+}

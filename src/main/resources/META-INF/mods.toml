@@ -1,0 +1,24 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="telegraph"
+version="1.0.0"
+displayName="Telegraph Voice Relay"
+authors="Reis"
+description="Relays Simple Voice Chat audio through cables."
+
+[[dependencies.telegraph]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.telegraph]]
+    modId="voicechat"
+    mandatory=true
+    versionRange="[1.20.1-2.4.0,)"
+    ordering="AFTER"
+    side="BOTH"
