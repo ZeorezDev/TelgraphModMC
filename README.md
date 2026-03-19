@@ -100,7 +100,7 @@ This mod **requires** Simple Voice Chat to function.
 
 ## License
 
-Licensed under **MIT License** (as defined in the project).
+Licensed under **GPL-3.0 license**.
 
 ---
 
