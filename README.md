@@ -31,33 +31,6 @@ This mod **requires** Simple Voice Chat to function.
 
 ---
 
-### 💬 Command-Based Messaging
-
-* Use the command:
-
-```
-/telegraph <message>
-```
-
-* Sends a message to all connected telegraph machines
-* Includes:
-
-  * Player name in message
-  * Cooldown system (prevents spam)
-
----
-
-### 🔊 Audio & Visual Feedback
-
-* Sending machine:
-
-  * Emits **red particles**
-* Receiving machines:
-
-  * Emit **green particles**
-  * Play telegraph beep sound
-
----
 
 ### 🔗 Network Detection
 
@@ -68,15 +41,6 @@ This mod **requires** Simple Voice Chat to function.
 * Sends message to all valid endpoints
 
 ---
-
-## 📦 Item Access (Important)
-
-* Items are **NOT available in the Creative Tab**
-* You must use commands to obtain them:
-
-```
-/give @p telegraph:<item_name>
-```
 
 ---
 
@@ -105,8 +69,6 @@ Licensed under **GPL-3.0 license**.
 ---
 
 ## Notes
-
-This mod is not intended to be a full communication overhaul.
 
 It provides a **basic, extendable telegraph-style relay system** that can be used in:
 
