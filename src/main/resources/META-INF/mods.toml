@@ -5,9 +5,9 @@ license="MIT"
 [[mods]]
 modId="telegraph"
 version="1.0.0"
-displayName="Telegraph Voice Relay"
+displayName="Historical Telegraph"
 authors="Reis"
-description="Relays Simple Voice Chat audio through cables."
+description="A survival-friendly telegraph communication system. Send messages across the world through cables!"
 
 [[dependencies.telegraph]]
     modId="forge"
@@ -17,8 +17,8 @@ description="Relays Simple Voice Chat audio through cables."
     side="BOTH"
 
 [[dependencies.telegraph]]
-    modId="voicechat"
+    modId="minecraft"
     mandatory=true
-    versionRange="[1.20.1-2.4.0,)"
-    ordering="AFTER"
+    versionRange="[1.20.1,1.21)"
+    ordering="NONE"
     side="BOTH"

@@ -1,4 +1,22 @@
 {
   "block.telegraph.telegraph_machine": "Telegraph Machine",
-  "block.telegraph.telegraph_cable": "Telegraph Cable"
+  "block.telegraph.cable_block": "Telegraph Cable",
+
+  "item.telegraph.telegram": "Telegram",
+
+  "itemGroup.telegraph": "Historical Telegraph",
+
+  "gui.telegraph.title": "Telegraph",
+  "gui.telegraph.message_placeholder": "Type your message...",
+  "gui.telegraph.channel_label": "Channel:",
+  "gui.telegraph.send": "Send",
+
+  "gui.telegraph.telegram_title": "Telegram",
+  "gui.telegraph.from": "From: %s",
+  "gui.telegraph.channel": "Channel: %d",
+  "gui.telegraph.day": "Day %d",
+
+  "message.telegraph.sent": "Message sent.",
+  "message.telegraph.cooldown": "Wait %d seconds before sending again.",
+  "message.telegraph.no_machines": "No machines found on that channel."
 }

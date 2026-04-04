@@ -1,0 +1,109 @@
+package com.reis.telegraph.system;
+
+import com.mojang.logging.LogUtils;
+import com.reis.telegraph.blocks.TelegraphBlockEntity;
+import com.reis.telegraph.network.NetworkManager;
+import com.reis.telegraph.registration.ModSounds;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.server.ServerLifecycleHooks;
+
+import org.slf4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+public class MessageDeliverySystem {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    /** Ticks of delay per cable-hop distance. 2 ticks = 0.1 second per block. */
+    private static final int TICKS_PER_BLOCK = 2;
+
+    private static final List<ScheduledDelivery> QUEUE = new ArrayList<>();
+
+    /**
+     * Schedule delivery of a message to all machines connected to senderPos
+     * on the given channel, with a delay proportional to cable distance.
+     */
+    public static void schedule(ServerLevel level, BlockPos senderPos,
+                                 String message, String sender, int channel, long currentTick) {
+        Map<BlockPos, Integer> targets = NetworkManager.findConnectedMachines(level, senderPos);
+        LOGGER.debug("[Telegraph] schedule: BFS found {} machine(s) from {}", targets.size(), senderPos);
+
+        int scheduled = 0;
+        for (Map.Entry<BlockPos, Integer> entry : targets.entrySet()) {
+            BlockPos targetPos = entry.getKey();
+            if (targetPos.equals(senderPos)) continue; // skip sender machine
+
+            // Filter by channel at scheduling time — the receiver must be on the same channel
+            BlockEntity targetBe = level.getBlockEntity(targetPos);
+            if (!(targetBe instanceof TelegraphBlockEntity targetTbe)) {
+                LOGGER.debug("[Telegraph] schedule: {} has no TelegraphBlockEntity — skipped", targetPos);
+                continue;
+            }
+
+            int targetChannel = targetTbe.getChannel();
+            if (targetChannel != channel) {
+                LOGGER.debug("[Telegraph] schedule: target {} is on ch {}, required ch {} — SKIPPED",
+                        targetPos, targetChannel, channel);
+                continue;
+            }
+
+            int distance = entry.getValue();
+            long deliverAt = currentTick + (long) distance * TICKS_PER_BLOCK;
+            QUEUE.add(new ScheduledDelivery(level.dimension(), targetPos, message, sender, channel, deliverAt));
+            LOGGER.debug("[Telegraph] schedule: target {} ch {} distance {} — SCHEDULED at tick {}",
+                    targetPos, targetChannel, distance, deliverAt);
+            scheduled++;
+        }
+
+        LOGGER.debug("[Telegraph] schedule: {} delivery(s) queued from {} on ch {}", scheduled, senderPos, channel);
+    }
+
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server == null || QUEUE.isEmpty()) return;
+
+        long currentTick = server.overworld().getGameTime();
+
+        QUEUE.removeIf(delivery -> {
+            if (delivery.deliverAtTick > currentTick) return false; // not yet
+
+            ServerLevel level = server.getLevel(delivery.dimension);
+            if (level == null || !level.isLoaded(delivery.targetPos)) return true; // discard
+
+            BlockEntity be = level.getBlockEntity(delivery.targetPos);
+            if (be instanceof TelegraphBlockEntity tbe) {
+                LOGGER.debug("[Telegraph] delivering message to {} on ch {}", delivery.targetPos, delivery.channel);
+                tbe.receiveMessage(delivery.message, delivery.sender, delivery.channel, currentTick);
+                level.playSound(null, delivery.targetPos,
+                        ModSounds.TELEGRAPH_BEEP.get(), SoundSource.BLOCKS, 1.0f, 0.8f);
+            } else {
+                LOGGER.debug("[Telegraph] delivery target {} is gone or not a TelegraphBlockEntity — discarded",
+                        delivery.targetPos);
+            }
+            return true; // remove from queue regardless
+        });
+    }
+
+    private record ScheduledDelivery(
+            ResourceKey<Level> dimension,
+            BlockPos targetPos,
+            String message,
+            String sender,
+            int channel,
+            long deliverAtTick
+    ) {}
+}
