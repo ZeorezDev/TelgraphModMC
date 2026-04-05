@@ -1,6 +1,9 @@
 {
   "block.telegraph.telegraph_machine": "Telegraph Machine",
   "block.telegraph.cable_block": "Telegraph Cable",
+  "block.telegraph.relay_station": "Relay Station",
+  "block.telegraph.telegraph_pole": "Telegraph Pole",
+  "block.telegraph.insulator": "Insulator",
 
   "item.telegraph.telegram": "Telegram",
 
@@ -10,6 +13,9 @@
   "gui.telegraph.message_placeholder": "Type your message...",
   "gui.telegraph.channel_label": "Channel:",
   "gui.telegraph.send": "Send",
+  "gui.telegraph.station_name_label": "Station:",
+  "gui.telegraph.station_name_placeholder": "Station name...",
+  "gui.telegraph.quality_label": "Signal: %d%%",
 
   "gui.telegraph.telegram_title": "Telegram",
   "gui.telegraph.from": "From: %s",
@@ -17,6 +23,8 @@
   "gui.telegraph.day": "Day %d",
 
   "message.telegraph.sent": "Message sent.",
+  "message.telegraph.sent_quality": "Message sent. Signal quality: %d%%",
   "message.telegraph.cooldown": "Wait %d seconds before sending again.",
-  "message.telegraph.no_machines": "No machines found on that channel."
+  "message.telegraph.no_machines": "No machines found on that channel.",
+  "message.telegraph.broken_line": "Signal too weak — message not delivered."
 }

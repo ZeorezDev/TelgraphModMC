@@ -2,9 +2,15 @@ package com.reis.telegraph.network.packets;
 
 import com.mojang.logging.LogUtils;
 import com.reis.telegraph.blocks.CableBlock;
+import com.reis.telegraph.blocks.InsulatorBlock;
+import com.reis.telegraph.blocks.RelayStationBlock;
 import com.reis.telegraph.blocks.TelegraphBlockEntity;
+import com.reis.telegraph.blocks.TelegraphPoleBlock;
+import com.reis.telegraph.config.TelegraphConfig;
+import com.reis.telegraph.network.NetworkManager;
 import com.reis.telegraph.registration.ModSounds;
 import com.reis.telegraph.system.MessageDeliverySystem;
+import com.reis.telegraph.system.SignalQualityCalculator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
@@ -95,10 +101,12 @@ public class SendMessagePacket {
                 return;
             }
 
-            // Check that the machine has at least one cable connected
+            // Check that the machine has at least one cable/relay/pole connected
             boolean hasCable = false;
             for (Direction dir : Direction.values()) {
-                if (level.getBlockState(pkt.pos.relative(dir)).getBlock() instanceof CableBlock) {
+                var adj = level.getBlockState(pkt.pos.relative(dir)).getBlock();
+                if (adj instanceof CableBlock || adj instanceof RelayStationBlock
+                 || adj instanceof TelegraphPoleBlock || adj instanceof InsulatorBlock) {
                     hasCable = true;
                     break;
                 }
@@ -119,10 +127,29 @@ public class SendMessagePacket {
             MessageDeliverySystem.schedule(level, pkt.pos, pkt.message,
                     player.getName().getString(), pkt.channel, currentTick);
 
-            // Sender feedback: sound + chat
+            // Sender feedback: sound + chat with quality info
             level.playSound(null, pkt.pos, ModSounds.TELEGRAPH_BEEP.get(),
                     SoundSource.BLOCKS, 0.5f, 1.2f);
-            player.sendSystemMessage(Component.translatable("message.telegraph.sent"));
+
+            // Compute best quality among reachable targets on this channel for feedback
+            Map<BlockPos, NetworkManager.NetworkPath> paths =
+                    NetworkManager.findConnectedMachinesWithPaths(level, pkt.pos);
+            int bestQuality = paths.entrySet().stream()
+                    .filter(e -> !e.getKey().equals(pkt.pos))
+                    .filter(e -> {
+                        var be2 = level.getBlockEntity(e.getKey());
+                        return be2 instanceof TelegraphBlockEntity t && t.getChannel() == pkt.channel;
+                    })
+                    .mapToInt(e -> SignalQualityCalculator.calculateQuality(e.getValue()))
+                    .max().orElse(0);
+
+            tbe.setLastSignalQuality(bestQuality);
+
+            if (TelegraphConfig.ENABLE_QUALITY_EFFECTS.get()) {
+                player.sendSystemMessage(Component.translatable("message.telegraph.sent_quality", bestQuality));
+            } else {
+                player.sendSystemMessage(Component.translatable("message.telegraph.sent"));
+            }
 
             COOLDOWNS.put(uuid, currentTick);
         });

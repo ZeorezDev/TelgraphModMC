@@ -42,7 +42,8 @@ public class TelegraphBlock extends Block implements EntityBlock {
                 } else {
                     // Open the compose GUI on the client
                     PacketHandler.sendToClient(
-                            new OpenGuiPacket(pos, tbe.getChannel()),
+                            new OpenGuiPacket(pos, tbe.getChannel(),
+                                    tbe.getStationName(), tbe.getLastSignalQuality()),
                             (ServerPlayer) player
                     );
                 }

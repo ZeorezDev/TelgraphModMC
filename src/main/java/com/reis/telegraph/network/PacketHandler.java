@@ -3,6 +3,7 @@ package com.reis.telegraph.network;
 import com.reis.telegraph.network.packets.OpenGuiPacket;
 import com.reis.telegraph.network.packets.SendMessagePacket;
 import com.reis.telegraph.network.packets.SetChannelPacket;
+import com.reis.telegraph.network.packets.SetStationNamePacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
@@ -12,7 +13,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 
 public class PacketHandler {
 
-    private static final String PROTOCOL_VERSION = "1";
+    private static final String PROTOCOL_VERSION = "2";
     public static SimpleChannel CHANNEL;
 
     public static void register() {
@@ -40,6 +41,12 @@ public class PacketHandler {
                 SetChannelPacket::encode,
                 SetChannelPacket::decode,
                 SetChannelPacket::handle,
+                java.util.Optional.of(NetworkDirection.PLAY_TO_SERVER));
+
+        CHANNEL.registerMessage(id++, SetStationNamePacket.class,
+                SetStationNamePacket::encode,
+                SetStationNamePacket::decode,
+                SetStationNamePacket::handle,
                 java.util.Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
 

@@ -2,6 +2,7 @@ package com.reis.telegraph.system;
 
 import com.mojang.logging.LogUtils;
 import com.reis.telegraph.blocks.TelegraphBlockEntity;
+import com.reis.telegraph.config.TelegraphConfig;
 import com.reis.telegraph.network.NetworkManager;
 import com.reis.telegraph.registration.ModSounds;
 import net.minecraft.core.BlockPos;
@@ -33,14 +34,16 @@ public class MessageDeliverySystem {
     /**
      * Schedule delivery of a message to all machines connected to senderPos
      * on the given channel, with a delay proportional to cable distance.
+     * Quality-gated: messages on broken/extremely long lines may be dropped or delayed extra.
      */
     public static void schedule(ServerLevel level, BlockPos senderPos,
                                  String message, String sender, int channel, long currentTick) {
-        Map<BlockPos, Integer> targets = NetworkManager.findConnectedMachines(level, senderPos);
+        Map<BlockPos, NetworkManager.NetworkPath> targets =
+                NetworkManager.findConnectedMachinesWithPaths(level, senderPos);
         LOGGER.debug("[Telegraph] schedule: BFS found {} machine(s) from {}", targets.size(), senderPos);
 
         int scheduled = 0;
-        for (Map.Entry<BlockPos, Integer> entry : targets.entrySet()) {
+        for (Map.Entry<BlockPos, NetworkManager.NetworkPath> entry : targets.entrySet()) {
             BlockPos targetPos = entry.getKey();
             if (targetPos.equals(senderPos)) continue; // skip sender machine
 
@@ -58,11 +61,24 @@ public class MessageDeliverySystem {
                 continue;
             }
 
-            int distance = entry.getValue();
-            long deliverAt = currentTick + (long) distance * TICKS_PER_BLOCK;
-            QUEUE.add(new ScheduledDelivery(level.dimension(), targetPos, message, sender, channel, deliverAt));
-            LOGGER.debug("[Telegraph] schedule: target {} ch {} distance {} — SCHEDULED at tick {}",
-                    targetPos, targetChannel, distance, deliverAt);
+            NetworkManager.NetworkPath path = entry.getValue();
+            int quality = SignalQualityCalculator.calculateQuality(path);
+
+            // Drop delivery on broken lines (quality < 5) when effects are enabled
+            if (TelegraphConfig.ENABLE_QUALITY_EFFECTS.get() && quality < 5) {
+                LOGGER.debug("[Telegraph] schedule: quality {} too low for {} — discarded", quality, targetPos);
+                continue;
+            }
+
+            int distance = path.distance();
+            long baseDelay = (long) distance * TICKS_PER_BLOCK;
+            // Low quality (< 30) doubles the propagation delay
+            long deliverAt = currentTick + (quality < 30 ? baseDelay * 2 : baseDelay);
+
+            QUEUE.add(new ScheduledDelivery(level.dimension(), targetPos, message, sender,
+                    channel, deliverAt, quality));
+            LOGGER.debug("[Telegraph] schedule: target {} ch {} dist {} quality {} — SCHEDULED at tick {}",
+                    targetPos, targetChannel, distance, quality, deliverAt);
             scheduled++;
         }
 
@@ -86,8 +102,10 @@ public class MessageDeliverySystem {
 
             BlockEntity be = level.getBlockEntity(delivery.targetPos);
             if (be instanceof TelegraphBlockEntity tbe) {
-                LOGGER.debug("[Telegraph] delivering message to {} on ch {}", delivery.targetPos, delivery.channel);
+                LOGGER.debug("[Telegraph] delivering message to {} on ch {} (quality {})",
+                        delivery.targetPos, delivery.channel, delivery.quality);
                 tbe.receiveMessage(delivery.message, delivery.sender, delivery.channel, currentTick);
+                tbe.setLastSignalQuality(delivery.quality);
                 level.playSound(null, delivery.targetPos,
                         ModSounds.TELEGRAPH_BEEP.get(), SoundSource.BLOCKS, 1.0f, 0.8f);
             } else {
@@ -104,6 +122,7 @@ public class MessageDeliverySystem {
             String message,
             String sender,
             int channel,
-            long deliverAtTick
+            long deliverAtTick,
+            int quality
     ) {}
 }

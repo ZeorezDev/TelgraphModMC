@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:oak_log" },
+    { "item": "minecraft:stick" }
+  ],
+  "result": { "item": "telegraph:telegraph_pole", "count": 2 }
+}

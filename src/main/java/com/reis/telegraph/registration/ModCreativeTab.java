@@ -20,6 +20,9 @@ public class ModCreativeTab {
                                 output.accept(ModBlocks.TELEGRAPH_MACHINE.get());
                                 output.accept(ModBlocks.CABLE_BLOCK.get());
                                 output.accept(ModItems.TELEGRAM.get());
+                                output.accept(ModBlocks.RELAY_STATION.get());
+                                output.accept(ModBlocks.TELEGRAPH_POLE.get());
+                                output.accept(ModBlocks.INSULATOR.get());
                             })
                             .build());
 }

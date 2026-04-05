@@ -18,6 +18,8 @@ public class TelegraphBlockEntity extends BlockEntity {
     private int channel = 0;
     private final List<ItemStack> pendingItems = new ArrayList<>();
     private static final int MAX_PENDING = 20;
+    private String stationName = "";
+    private int lastSignalQuality = -1; // -1 = never measured
 
     public TelegraphBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TELEGRAPH_ENTITY.get(), pos, state);
@@ -34,6 +36,26 @@ public class TelegraphBlockEntity extends BlockEntity {
 
     public List<ItemStack> getPendingItems() {
         return pendingItems;
+    }
+
+    public String getStationName() {
+        return stationName == null ? "" : stationName;
+    }
+
+    public void setStationName(String name) {
+        if (name == null) name = "";
+        this.stationName = name.replaceAll("[^A-Za-z0-9 _\\-']", "")
+                               .substring(0, Math.min(name.length(), 32));
+        setChanged();
+    }
+
+    public int getLastSignalQuality() {
+        return lastSignalQuality;
+    }
+
+    public void setLastSignalQuality(int quality) {
+        this.lastSignalQuality = Math.max(-1, Math.min(100, quality));
+        setChanged();
     }
 
     /**
@@ -53,6 +75,8 @@ public class TelegraphBlockEntity extends BlockEntity {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putInt("Channel", channel);
+        tag.putString("StationName", stationName);
+        tag.putInt("LastSignalQuality", lastSignalQuality);
 
         ListTag pendingTag = new ListTag();
         for (ItemStack stack : pendingItems) {
@@ -67,6 +91,8 @@ public class TelegraphBlockEntity extends BlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag);
         channel = tag.getInt("Channel");
+        stationName = tag.getString("StationName"); // returns "" if absent — safe default
+        lastSignalQuality = tag.contains("LastSignalQuality") ? tag.getInt("LastSignalQuality") : -1;
 
         pendingItems.clear();
         ListTag pendingTag = tag.getList("PendingItems", Tag.TAG_COMPOUND);
