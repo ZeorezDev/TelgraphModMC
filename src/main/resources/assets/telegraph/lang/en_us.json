@@ -19,6 +19,7 @@
 
   "gui.telegraph.telegram_title": "Telegram",
   "gui.telegraph.from": "From: %s",
+  "gui.telegraph.station": "Station: %s",
   "gui.telegraph.channel": "Channel: %d",
   "gui.telegraph.day": "Day %d",
 

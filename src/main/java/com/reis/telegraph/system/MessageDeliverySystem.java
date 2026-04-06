@@ -37,7 +37,8 @@ public class MessageDeliverySystem {
      * Quality-gated: messages on broken/extremely long lines may be dropped or delayed extra.
      */
     public static void schedule(ServerLevel level, BlockPos senderPos,
-                                 String message, String sender, int channel, long currentTick) {
+                                 String message, String sender, String senderStation,
+                                 int channel, long currentTick) {
         Map<BlockPos, NetworkManager.NetworkPath> targets =
                 NetworkManager.findConnectedMachinesWithPaths(level, senderPos);
         LOGGER.debug("[Telegraph] schedule: BFS found {} machine(s) from {}", targets.size(), senderPos);
@@ -76,7 +77,7 @@ public class MessageDeliverySystem {
             long deliverAt = currentTick + (quality < 30 ? baseDelay * 2 : baseDelay);
 
             QUEUE.add(new ScheduledDelivery(level.dimension(), targetPos, message, sender,
-                    channel, deliverAt, quality));
+                    senderStation, channel, deliverAt, quality));
             LOGGER.debug("[Telegraph] schedule: target {} ch {} dist {} quality {} — SCHEDULED at tick {}",
                     targetPos, targetChannel, distance, quality, deliverAt);
             scheduled++;
@@ -104,7 +105,8 @@ public class MessageDeliverySystem {
             if (be instanceof TelegraphBlockEntity tbe) {
                 LOGGER.debug("[Telegraph] delivering message to {} on ch {} (quality {})",
                         delivery.targetPos, delivery.channel, delivery.quality);
-                tbe.receiveMessage(delivery.message, delivery.sender, delivery.channel, currentTick);
+                tbe.receiveMessage(delivery.message, delivery.sender, delivery.senderStation,
+                        delivery.channel, currentTick);
                 tbe.setLastSignalQuality(delivery.quality);
                 level.playSound(null, delivery.targetPos,
                         ModSounds.TELEGRAPH_BEEP.get(), SoundSource.BLOCKS, 1.0f, 0.8f);
@@ -121,6 +123,7 @@ public class MessageDeliverySystem {
             BlockPos targetPos,
             String message,
             String sender,
+            String senderStation,
             int channel,
             long deliverAtTick,
             int quality

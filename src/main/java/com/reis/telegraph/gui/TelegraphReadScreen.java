@@ -46,6 +46,7 @@ public class TelegraphReadScreen extends Screen {
         if (tag == null) return;
 
         String sender = tag.getString("SenderName");
+        String senderStation = tag.getString("SenderStation");
         int channel = tag.getInt("Channel");
         long timestamp = tag.getLong("Timestamp");
         String message = tag.getString("MessageText");
@@ -58,6 +59,14 @@ public class TelegraphReadScreen extends Screen {
         if (!sender.isEmpty()) {
             graphics.drawString(font,
                     Component.translatable("gui.telegraph.from", sender).withStyle(ChatFormatting.DARK_GRAY),
+                    textLeft, y, 0x3B2000, false);
+            y += 12;
+        }
+
+        // Sender station
+        if (!senderStation.isEmpty()) {
+            graphics.drawString(font,
+                    Component.translatable("gui.telegraph.station", senderStation).withStyle(ChatFormatting.DARK_GRAY),
                     textLeft, y, 0x3B2000, false);
             y += 12;
         }

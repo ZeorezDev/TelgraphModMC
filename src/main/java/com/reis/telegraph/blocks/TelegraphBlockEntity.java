@@ -62,11 +62,12 @@ public class TelegraphBlockEntity extends BlockEntity {
      * Called by the delivery system when a message arrives at this machine.
      * Always stores the Telegram item inside the machine — player must right-click to collect.
      */
-    public void receiveMessage(String message, String sender, int ch, long timestamp) {
+    public void receiveMessage(String message, String sender, String senderStation,
+                               int ch, long timestamp) {
         if (level == null || level.isClientSide) return;
 
         if (pendingItems.size() < MAX_PENDING) {
-            pendingItems.add(TelegraphMessageItem.create(message, sender, ch, timestamp));
+            pendingItems.add(TelegraphMessageItem.create(message, sender, senderStation, ch, timestamp));
             setChanged();
         }
     }

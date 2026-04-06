@@ -125,7 +125,7 @@ public class SendMessagePacket {
 
             // Schedule delivery to connected machines
             MessageDeliverySystem.schedule(level, pkt.pos, pkt.message,
-                    player.getName().getString(), pkt.channel, currentTick);
+                    player.getName().getString(), tbe.getStationName(), pkt.channel, currentTick);
 
             // Sender feedback: sound + chat with quality info
             level.playSound(null, pkt.pos, ModSounds.TELEGRAPH_BEEP.get(),

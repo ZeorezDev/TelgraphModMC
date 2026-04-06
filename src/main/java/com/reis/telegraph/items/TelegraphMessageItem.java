@@ -28,12 +28,17 @@ public class TelegraphMessageItem extends Item {
         if (tag == null) return;
 
         String sender = tag.getString("SenderName");
+        String senderStation = tag.getString("SenderStation");
         int channel = tag.getInt("Channel");
         long timestamp = tag.getLong("Timestamp");
         String message = tag.getString("MessageText");
 
         if (!sender.isEmpty()) {
             tooltip.add(Component.translatable("gui.telegraph.from", sender)
+                    .withStyle(ChatFormatting.GRAY));
+        }
+        if (!senderStation.isEmpty()) {
+            tooltip.add(Component.translatable("gui.telegraph.station", senderStation)
                     .withStyle(ChatFormatting.GRAY));
         }
         tooltip.add(Component.translatable("gui.telegraph.channel", channel)
@@ -66,11 +71,13 @@ public class TelegraphMessageItem extends Item {
     }
 
     /** Utility: build a Telegram ItemStack from raw data */
-    public static ItemStack create(String message, String sender, int channel, long timestamp) {
+    public static ItemStack create(String message, String sender, String senderStation,
+                                   int channel, long timestamp) {
         ItemStack stack = new ItemStack(com.reis.telegraph.registration.ModItems.TELEGRAM.get());
         CompoundTag tag = new CompoundTag();
         tag.putString("MessageText", message);
         tag.putString("SenderName", sender);
+        tag.putString("SenderStation", senderStation == null ? "" : senderStation);
         tag.putInt("Channel", channel);
         tag.putLong("Timestamp", timestamp);
         stack.setTag(tag);
