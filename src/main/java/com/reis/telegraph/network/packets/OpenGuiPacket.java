@@ -1,5 +1,6 @@
 package com.reis.telegraph.network.packets;
 
+import com.reis.telegraph.gui.ScreenOpenCallback;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
@@ -7,6 +8,13 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class OpenGuiPacket {
+
+    /**
+     * Set on the client by TelegraphClientSetup.init() — null on the dedicated server.
+     * Using a functional interface from common code keeps TelegraphScreen out of this
+     * class's constant pool, preventing NoClassDefFoundError on Mohist / dedicated servers.
+     */
+    public static ScreenOpenCallback clientScreenOpener = null;
 
     private final BlockPos pos;
     private final int currentChannel;
@@ -36,13 +44,11 @@ public class OpenGuiPacket {
     }
 
     public static void handle(OpenGuiPacket pkt, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> openScreen(pkt.pos, pkt.currentChannel, pkt.stationName, pkt.lastSignalQuality));
+        ctx.get().enqueueWork(() -> {
+            if (clientScreenOpener != null) {
+                clientScreenOpener.open(pkt.pos, pkt.currentChannel, pkt.stationName, pkt.lastSignalQuality);
+            }
+        });
         ctx.get().setPacketHandled(true);
-    }
-
-    // Separated to avoid client class loading on server
-    private static void openScreen(BlockPos pos, int channel, String stationName, int quality) {
-        net.minecraft.client.Minecraft.getInstance()
-                .setScreen(new com.reis.telegraph.gui.TelegraphScreen(pos, channel, stationName, quality));
     }
 }

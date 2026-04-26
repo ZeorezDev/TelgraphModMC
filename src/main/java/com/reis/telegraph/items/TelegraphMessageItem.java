@@ -14,8 +14,16 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class TelegraphMessageItem extends Item {
+
+    /**
+     * Set on the client by TelegraphClientSetup.init() — null on the dedicated server.
+     * Keeps TelegraphReadScreen (which extends the client-only Screen) out of this
+     * class's constant pool, preventing NoClassDefFoundError on Mohist / dedicated servers.
+     */
+    public static Consumer<ItemStack> clientScreenOpener = null;
 
     public TelegraphMessageItem() {
         super(new Properties().rarity(Rarity.UNCOMMON).stacksTo(1));
@@ -58,16 +66,10 @@ public class TelegraphMessageItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (level.isClientSide) {
-            openReadScreen(stack);
+        if (level.isClientSide && clientScreenOpener != null) {
+            clientScreenOpener.accept(stack);
         }
         return InteractionResultHolder.success(stack);
-    }
-
-    // Called client-side only — separated to avoid classloading issues
-    private void openReadScreen(ItemStack stack) {
-        net.minecraft.client.Minecraft.getInstance()
-                .setScreen(new com.reis.telegraph.gui.TelegraphReadScreen(stack));
     }
 
     /** Utility: build a Telegram ItemStack from raw data */

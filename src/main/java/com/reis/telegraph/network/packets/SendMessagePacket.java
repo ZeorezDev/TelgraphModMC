@@ -30,8 +30,13 @@ import java.util.function.Supplier;
 public class SendMessagePacket {
 
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final Map<UUID, Long> COOLDOWNS = new HashMap<>();
+    static final Map<UUID, Long> COOLDOWNS = new HashMap<>(); // package-visible for cleanup
     private static final long COOLDOWN_TICKS = 600L; // 30 seconds
+
+    /** Called by MessageDeliverySystem on server stop to reset per-player cooldown state. */
+    public static void clearCooldowns() {
+        COOLDOWNS.clear();
+    }
 
     private final BlockPos pos;
     private final String message;

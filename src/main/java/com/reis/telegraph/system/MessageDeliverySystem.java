@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.reis.telegraph.blocks.TelegraphBlockEntity;
 import com.reis.telegraph.config.TelegraphConfig;
 import com.reis.telegraph.network.NetworkManager;
+import com.reis.telegraph.network.packets.SendMessagePacket;
 import com.reis.telegraph.registration.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
@@ -13,6 +14,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
@@ -84,6 +86,12 @@ public class MessageDeliverySystem {
         }
 
         LOGGER.debug("[Telegraph] schedule: {} delivery(s) queued from {} on ch {}", scheduled, senderPos, channel);
+    }
+
+    @SubscribeEvent
+    public static void onServerStopped(ServerStoppedEvent event) {
+        QUEUE.clear();
+        SendMessagePacket.clearCooldowns();
     }
 
     @SubscribeEvent
